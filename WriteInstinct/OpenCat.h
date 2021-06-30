@@ -958,8 +958,6 @@ bool sensorConnectedQ(int n) {
   return sqrt(mean) > 20 ? true : false;
 }
 
-
-
 int SoundLightSensorPattern(char *cmd) { //under construction, and will only be active with our new sound and light sensor connected.
   int sound = analogRead(SOUND); //larger sound has larger readings
   int light = analogRead(LIGHT); //lower light has larger readings
@@ -969,48 +967,56 @@ int SoundLightSensorPattern(char *cmd) { //under construction, and will only be 
   Serial.print('\t');
   Serial.print(sound);
   Serial.print('\t');
-  Serial.println(light);
+  Serial.print(light);
+  Serial.print('\t');
+  Serial.println(lightLag);
   if (light > 800 && sound < 500) { //dark condition
     if (!restQ) {
       skillByName("rest", 1, 1, 1);
-      delay(500);
+      delay(1000);
       restQ = true;
     }
   }
   else {
-    //    int headPan;
-    //    if (abs(light - 450) > 10)
-    //      headPan = min(max(currentAng[0] + (light - 450) / 50, -50), 50);
-    //    if (sound > 250)
-    //      headPan = min(max(currentAng[0] + (random(0, 2) * 2 - 1) * (sound - 250) / 50, -50), 50);
-    //    calibratedPWM(0, abs(headPan) > 80 ? 0 : headPan, 0.01);
     restQ = false;
+    if (abs(light - lightLag) > 10 || sound > 300) {
+      if (abs(light - lightLag) > 10)
+        motion.dutyAngles[0] = min(max(motion.dutyAngles[0] + (light - lightLag) / 5, -50), 50);
+      if (sound > 300) {
+        motion.dutyAngles[0] = min(max(motion.dutyAngles[0] + (random(0, 2) * 2 - 1) * (sound - 250) / 10, -90), 90);
+      }
+      calibratedPWM(0, abs(motion.dutyAngles[0]) > 85 ? 0 : motion.dutyAngles[0], 0.01);
+      //      delay(100);
+    }
 
     if (sound > 700) {
-
-      for (byte l = 0; l < 10; l++) {
+      for (byte l = 0; l < 5; l++) {
         lightLag = light;
         light = analogRead(LIGHT); //lower light has larger readings
-        if (light - lightLag  < - 40) {
-          beep(15);
+        if (light - lightLag > 80) {
+          delay(300);
+          beep(15,100);
+          beep(10,200);
+          beep(5,300);
+          beep(2,400);
           PTL("Bang!");
           strcpy(cmd, "pd");
           token = 'k';
+          lightLag = light;
+          checkGyro = true;
           return 4;
         }
       }
-
       strcpy(cmd, "balance");
-
     }
     else
       strcpy(cmd, "sit");
-
-
     token = 'k';
+    lightLag = light;
     return 4;
-    //delay(10);
+
   }
+  lightLag = light;
   return 0;
   //    if (sound < 700) {
   //      skillByName("sit", 1, 1, 0);
