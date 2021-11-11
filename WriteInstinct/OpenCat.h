@@ -280,6 +280,16 @@ Adafruit_NeoPixel pixels(NUMPIXELS, PIXEL_PIN, NEO_GRB + NEO_KHZ800);
 #define WALKING_DOF 8
 #define P1S
 //#define MPU_YAW180
+
+#else
+#ifdef BITTLE12
+#define HEAD
+#define LL_LEG
+#define WALKING_DOF 12
+#define P1S
+//#define MPU_YAW180
+#endif
+
 #endif
 #endif
 //remap pins for different walking modes, pin4 ~ pin15
@@ -378,24 +388,39 @@ int8_t melody[] = {8, 13, 15,//10, 13, 8,  0,  5,  8,  3,  5, 8,
 //byte pins[] = {11, 12, 4, 16, 16, 16, 16, 16, 9,14,1,6,8,15,0,7};//tail version
 
 int8_t calibs[] = {0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0};
-#ifdef BITTLE
-int8_t middleShifts[] = {0, 15, 0, 0,
-                         -45, -45, -45, -45,
-                         45, 45, -45, -45,
-                         -75, -75, -75, -75
-                        };
-#else
+#ifdef NYBBLE
 int8_t middleShifts[] = {0, 15, 0, 0,
                          -45, -45, -45, -45,
                          0, 0, 0, 0,
                          0, 0, 0, 0
                         };
+#elif defined BITTLE
+int8_t middleShifts[] = {0, 15, 0, 0,
+                         -45, -45, -45, -45,
+                         45, 45, -45, -45,
+                         -75, -75, -75, -75
+                        };
+#elif defined BITTLE12
+int8_t middleShifts[] = {0, 15, 0, 0,
+                         -45, -45, -45, -45,
+                         45, 45, -45, -45,
+                         -65, -65, -65, -65
+                        };
 #endif
+
+#ifndef BITTLE12
 int8_t rotationDirections[] = {1, -1, 1, 1,
                                1, -1, 1, -1,
                                1, -1, -1, 1,
                                -1, 1, 1, -1
                               };
+#else
+int8_t rotationDirections[] = {1, -1, 1, 1,
+                               1, -1, 1, -1,
+                               1, -1, -1, 1,
+                               1, -1, -1, 1
+                              };
+#endif
 byte servoAngleRanges[] =  {SERVO_ANG_RANGE, SERVO_ANG_RANGE, SERVO_ANG_RANGE, SERVO_ANG_RANGE,
                             SERVO_ANG_RANGE, SERVO_ANG_RANGE, SERVO_ANG_RANGE, SERVO_ANG_RANGE,
                             SERVO_ANG_RANGE, SERVO_ANG_RANGE, SERVO_ANG_RANGE, SERVO_ANG_RANGE,
@@ -870,7 +895,7 @@ float adjust(byte i) {
     if ((leftQ && ramp * RollPitchDeviation[0] > 0 )// operator * is higher than &&
         || ( !leftQ && ramp * RollPitchDeviation[0] < 0))
       leftRightFactor = LEFT_RIGHT_FACTOR * abs(ramp);
-    rollAdj = fabs(RollPitchDeviation[0]) * adaptiveCoefficient(i, 0) * leftRightFactor;
+    rollAdj = (i > 7 ? fabs(RollPitchDeviation[0]) : RollPitchDeviation[0]) * adaptiveCoefficient(i, 0) * leftRightFactor;
 
   }
   else
@@ -935,17 +960,19 @@ int configureEEPROM() {
   return 1;
 }
 
-#ifdef BITTLE
-int8_t expect[] = {57,  43,  60,  47, -18,   7, -17,   7,};
-#elif defined NYBBLE
+#ifdef NYBBLE
 int8_t expect[] = {51,  39, -57, -43, -18,   7,  19,  -7,};
+#elif defined BITTLE
+int8_t expect[] = {57,  43,  60,  47, -18,   7, -17,   7,};
+#elif defined BITTLE12
+int8_t expect[] = {57,  43,  60,  47, -18,   7, -17,   7,};
 #endif
 int testEEPROM(char* skill) {
   motion.loadBySkillName(skill);
   PTL(motion.period);
   int len = 0;
   while (len < 8) {
-    if(motion.dutyAngles[len]!=expect[len])
+    if (motion.dutyAngles[len] != expect[len])
       return 0;
     PT(int8_t(motion.dutyAngles[len]));
     PT('\t');

@@ -1,4 +1,4 @@
-#define BITTLE
+#define BITTLE12
 #define NUM_SKILLS 31
 
 const char bdF[] PROGMEM = { 
@@ -478,7 +478,7 @@ const char str[] PROGMEM = {
     0,  30,   0,   0,  -5,  -5,   0,   0, -75, -75,  30,  30,  60,  60,   0,   0,};
 const char zero[] PROGMEM = { 
 1, 0, 0, 1,
-    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,};
+    0,   0,   0,   0,   -90,   -90,   -90,   -90,   60,   60,   -60,   -60,   -70,   -70,   70,   70,};
 
 const char bf[] PROGMEM = { 
 -8, 0, 0, 1,

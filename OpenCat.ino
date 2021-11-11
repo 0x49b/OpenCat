@@ -532,11 +532,11 @@ void loop() {
               shutServos();
             break;
           }
-        //        case T_RAMP: { //if the robot is on a ramp, flip the adaption direction
-        //            ramp = (ramp == 1) ? -1.5 : 1;
-        //            token = T_SKILL;
-        //            break;
-        //          }
+        case T_RAMP: { //if the robot is on a ramp, flip the adaption direction
+            ramp = (ramp == 1) ? -1.5 : 1;
+            token = T_SKILL;
+            break;
+          }
         case T_SAVE: {
             PTLF("save offset");
             saveCalib(servoCalibs);
@@ -826,15 +826,15 @@ void loop() {
         if (jointIdx == 1)
           jointIdx = DOF - WALKING_DOF;
 #endif
-        if (jointIdx < firstMotionJoint && abs(motion.period) > 1) {
-          calibratedPWM(jointIdx, (jointIdx != 1 ? offsetLR : 0) //look left or right
-                        + 10 * sin (timer * (jointIdx + 2) * M_PI / abs(motion.period)) //look around
+        if (jointIdx < 8) { // && abs(motion.period) > 1) {
+          calibratedPWM(jointIdx, //(jointIdx != 1 ? offsetLR : 0) //look left or right
+                        //+ 10 * sin (timer * (jointIdx + 2) * M_PI / abs(motion.period)) //look around
 #ifdef GYRO
                         + (checkGyro ? adjust(jointIdx) : 0)
 #endif
                        );
         }
-        else if (jointIdx >= firstMotionJoint) {
+        else if (jointIdx >= 8) {
           int dutyIdx = timer * WALKING_DOF + jointIdx - firstMotionJoint;
           calibratedPWM(jointIdx, motion.dutyAngles[dutyIdx]*motion.angleDataRatio//+ ((Xconfig && (jointIdx == 14 || jointIdx == 15)) ? 180 : 0)
 #ifdef GYRO
